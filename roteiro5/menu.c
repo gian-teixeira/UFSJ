@@ -18,6 +18,7 @@ struct menu {
     struct menu_item *items;
     size_t item_count;
     bool persistant;
+    char *indicator;
 };
 
 struct menu_item*
@@ -47,6 +48,7 @@ menu_create(bool persistant)
     m->items = menu_item_create("", NULL);
     m->item_count = 0;
     m->persistant = persistant;
+    m->indicator = NULL;
     return m;
 }
 
@@ -127,9 +129,20 @@ menu_item_activate(struct menu *m, int pos)
     return true;
 }
 
+bool
+menu_set_indicator(struct menu *m, char *indicator)
+{
+    if(m == NULL) return false;
+    if(m->indicator) free(m->indicator);
+    m->indicator = malloc(strlen(indicator));
+    strcpy(m->indicator,indicator);
+    return true;
+}
+
 #define CURSOR_UP "\e[1A"
 #define CURSOR_DOWN "\e[1B"
 #define ENTER 10
+#define HLINE for(int i = 0; i < 15; i++) printf("="); printf("\n")
 
 void
 menu_show(struct menu *m)
@@ -142,16 +155,23 @@ menu_show(struct menu *m)
     newt = oldt;
     newt.c_lflag &= ~(ICANON | ECHO); 
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-
+    
     do {
+        HLINE;
         struct menu_item *tmp = m->items->next;
         int index = 0;
+        size_t line_len, max_line_len = 0;
         while(tmp) {
+            if(m->indicator) printf("%s",m->indicator);
             printf("%d %s\n", ++index, tmp->label);
+            line_len = strlen(tmp->label);
+            if(line_len > max_line_len) max_line_len = line_len;
             if(tmp->next == NULL) break;
             tmp = tmp->next;
         }
-        printf(CURSOR_UP);
+        if(m->indicator) line_len += strlen(m->indicator);
+        HLINE;
+        printf(CURSOR_UP CURSOR_UP);
 
         bool select = false;
         while(!select) {
@@ -169,10 +189,10 @@ menu_show(struct menu *m)
                 index++;
                 printf(CURSOR_DOWN);
                 break;
-            case ENTER: 
+            default: 
                 select = true;
-                int down_lines = m->item_count - index + 1;
-                while(down_lines--) printf(CURSOR_DOWN);
+                int down_lines = m->item_count - index + 2;
+                while(down_lines--) printf("\r" CURSOR_DOWN);
                 if(cmd == ENTER) 
                     if(tmp->callback) tmp->callback(index);
             }
