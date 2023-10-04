@@ -144,6 +144,7 @@ menu_set_indicator(struct menu *m, char *indicator)
 #define ENTER 10
 #define HLINE for(int i = 0; i < 15; i++) printf("="); printf("\n")
 
+
 void
 menu_show(struct menu *m)
 {
@@ -193,8 +194,10 @@ menu_show(struct menu *m)
                 select = true;
                 int down_lines = m->item_count - index + 2;
                 while(down_lines--) printf("\r" CURSOR_DOWN);
-                if(cmd == ENTER) 
+                if(cmd == ENTER) {
                     if(tmp->callback) tmp->callback(index);
+                    //if(m->persistant) system("clear");
+                }
             }
         }
     } while(m->persistant);

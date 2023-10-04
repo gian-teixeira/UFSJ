@@ -26,7 +26,7 @@ bool menu_item_activate(struct menu *m, int pos);
 bool menu_set_indicator(struct menu *m, char *indicator);
 void menu_show(struct menu *m);
 
-struct menu_item *menu_item_create();
+struct menu_item *menu_item_create(char *label, menu_item_callback_f callback);
 void menu_item_destroy(struct menu_item *mi);
 
 #endif

@@ -16,12 +16,12 @@ int fila_alvo;
 void
 selecionar_fila(size_t index)
 {
-    fila_alvo = index;
+    fila_alvo = index - 1;
     printf("%s\n",nome_fila[fila_alvo]);
 }
 
 void
-mostrar_filas(size_t index)
+menu_mostrar_filas(size_t index)
 {
     menu_t *menu_fila = menu_create(false);
     menu_set_indicator(menu_fila, ". ");
@@ -33,7 +33,7 @@ mostrar_filas(size_t index)
 }
 
 void
-adicionar_fila(size_t index)
+menu_adicionar_fila(size_t index)
 {
     char nome[100];
 
@@ -51,17 +51,41 @@ adicionar_fila(size_t index)
     fila_quant++;
 }
 
+void
+menu_enfileirar(size_t index)
+{
+    int item;
+
+    static struct termios oldt, newt;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag |= (ICANON | ECHO); 
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+    scanf("%d",&item);
+    printf("%d\n",fila_alvo);
+    enfileirar(fila[fila_alvo],item);
+
+    setbuf(stdin,NULL);
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+}
+
+void
+menu_imprimir(size_t index)
+{
+    imprime(fila[fila_alvo]);
+}
+
+
+
 int main() {
     menu_t *m = menu_create(true);
 
-    menu_add_item(m,menu_item_create("selecionar fila",mostrar_filas),-1);
-    menu_add_item(m,menu_item_create("adicionar fila",adicionar_fila),-1);
-    menu_add_item(m,menu_item_create("enfileirar",mostrar_filas),-1);
-    menu_add_item(m,menu_item_create("desenfileirar",mostrar_filas),-1);
-    menu_add_item(m,menu_item_create("ver inicio",mostrar_filas),-1);
-    menu_add_item(m,menu_item_create("imprimir",mostrar_filas),-1);
-    menu_add_item(m,menu_item_create("destruir",mostrar_filas),-1);
-    menu_add_item(m,menu_item_create("sair",mostrar_filas),-1);
+    menu_add_item(m,menu_item_create("selecionar fila",menu_mostrar_filas),-1);
+    menu_add_item(m,menu_item_create("adicionar fila",menu_adicionar_fila),-1);
+    menu_add_item(m,menu_item_create("enfileirar",menu_enfileirar),-1);
+    menu_add_item(m,menu_item_create("imprimir",menu_imprimir),-1);
+
 
     menu_show(m);
     menu_destroy(m);
