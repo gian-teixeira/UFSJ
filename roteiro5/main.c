@@ -1,93 +1,26 @@
-#include <stdio.h>
-#include <stddef.h>
-#include <string.h>
-#include "menu.h"
-#include "FSE.h"
-#include <termios.h>
-#include <unistd.h>
+//#include "FSE.h"
+#include "menuF.h"
 
-#define MAX_FILA 10
+extern int numOpcoes;
+extern char *nomeOpcoes[];
+extern void (*functions[])();
 
-Fila *fila[MAX_FILA];
-char nome_fila[MAX_FILA][100];
-int fila_quant = 0;
-int fila_alvo;
-
-void
-selecionar_fila(size_t index)
-{
-    fila_alvo = index - 1;
-    printf("%s\n",nome_fila[fila_alvo]);
+void menu() {
+    int opcao;
+    do {
+        printf("\n");
+        for(int i = 0; i < numOpcoes; i++) {
+            printf("%d - %s\n", i+1 ,nomeOpcoes[i]);
+        }
+        printf("Opcao: ");
+        scanf("%d",&opcao);
+        setbuf(stdin,NULL);
+        if(--opcao && !menuValido()) printf("Nenhuma pilha foi criada!\n");
+        else functions[opcao]();
+    } while(opcao != numOpcoes);    
 }
-
-void
-menu_mostrar_filas(size_t index)
-{
-    menu_t *menu_fila = menu_create(false);
-    menu_set_indicator(menu_fila, ". ");
-    for(int i = 0; i < fila_quant; i++)
-        menu_add_item(menu_fila,
-                      menu_item_create(nome_fila[i], selecionar_fila),-1);
-    menu_show(menu_fila);
-    menu_destroy(menu_fila);
-}
-
-void
-menu_adicionar_fila(size_t index)
-{
-    char nome[100];
-
-    static struct termios oldt, newt;
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag |= (ICANON | ECHO); 
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    scanf("%s",nome);
-    setbuf(stdin,NULL);
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-
-    strcpy(nome_fila[fila_quant],nome);
-    fila[fila_quant] = criaFila();
-    fila_quant++;
-}
-
-void
-menu_enfileirar(size_t index)
-{
-    int item;
-
-    static struct termios oldt, newt;
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag |= (ICANON | ECHO); 
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-
-    scanf("%d",&item);
-    printf("%d\n",fila_alvo);
-    enfileirar(fila[fila_alvo],item);
-
-    setbuf(stdin,NULL);
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-}
-
-void
-menu_imprimir(size_t index)
-{
-    imprime(fila[fila_alvo]);
-}
-
-
 
 int main() {
-    menu_t *m = menu_create(true);
-
-    menu_add_item(m,menu_item_create("selecionar fila",menu_mostrar_filas),-1);
-    menu_add_item(m,menu_item_create("adicionar fila",menu_adicionar_fila),-1);
-    menu_add_item(m,menu_item_create("enfileirar",menu_enfileirar),-1);
-    menu_add_item(m,menu_item_create("imprimir",menu_imprimir),-1);
-
-
-    menu_show(m);
-    menu_destroy(m);
+    menu();
     return 0;
 }

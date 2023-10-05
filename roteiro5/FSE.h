@@ -1,95 +1,90 @@
-/*----------------- File: FSE.h  ----------------------+
-|Fila Sequencial Estatica                               |
-|					      		                        |
-|					      		                        |
-| Implementado por Guilherme C. Pena em 19/09/2023      |
-+-------------------------------------------------------+ */
-
-#ifndef FILA_H
-#define FILA_H
+# ifndef FSE_H
+# define FSE_H
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX 100
-typedef struct{
-    int qtd, ini, fim;
-    int dados[MAX];
-}Fila;
+typedef struct NO {
+    int info ;
+    struct NO* prox;
+} NO;
 
+typedef struct {
+    int qtd;
+    struct NO* ini;
+    struct NO* fim;
+} Fila;
 
-Fila* criaFila(){
-    Fila* fi;
-    fi = (Fila*) malloc (sizeof(Fila));
-    if(fi != NULL){
-        fi->qtd = fi->ini = fi->fim = 0;
-    }
-    return fi;
+static NO *criaNO(int info) {
+    NO *n = (NO*)malloc(sizeof(NO));
+    n->info = info;
+    n->prox = NULL;
+    return n;
 }
 
-void destroiFila(Fila *fi){
-    if(fi != NULL)
-        free(fi);
+Fila *criaFila() {
+    Fila *fi = (Fila*)malloc(sizeof(Fila));
+    fi->qtd = 0;
+    fi->ini = criaNO(0);
+    fi->fim = fi->ini;
+}
+
+int destroiFila(Fila *fi) {
+    if(fi == NULL) return 0;
+    NO *tmp;
+    while(fi->ini) {
+        tmp = fi->ini;
+        fi->ini = fi->ini->prox;
+        free(tmp);
+    }
+    free(fi);
 }
 
 int tamanhoFila(Fila *fi){
-    if(fi == NULL)
-        return -1;
+    if(fi == NULL) return -1;
     return fi->qtd;
 }
 
-int estaCheia(Fila *fi){
-    if(fi == NULL)
-        return -1;
-    return (fi->qtd == MAX);
-}
-
 int estaVazia(Fila *fi){
-    if(fi == NULL)
-        return -1;
+    if(fi == NULL) return -1;
     return (fi->qtd == 0);
 }
 
+int verInicio(Fila *fi, int *saida) {
+    if(fi == NULL || fi->ini->prox == NULL) return 0;
+    *saida = fi->ini->prox->info;
+    return 1;
+}
 
-int enfileirar(Fila* fi, int elem){
-    if(fi == NULL) return 0;
-    if(estaCheia(fi)) return 0;
-    fi->dados[fi->fim] = elem;
-    fi->fim = (fi->fim+1) % MAX;
+int enfileirar(Fila *fi, int elem) {
+    if(fi == NULL || fi->fim == NULL) return 0;
+    NO *n = criaNO(elem);
+    if(n == NULL) return 0;
+    fi->fim->prox = n;
+    fi->fim = n;
     fi->qtd++;
     return 1;
 }
 
-int desenfileirar(Fila* fi){
-    if(fi == NULL) return 0;
-    if(estaVazia(fi)) return 0;
-    fi->ini = (fi->ini+1) % MAX;
+int desenfileirar(Fila *fi) {
+    if(fi == NULL || fi->ini->prox == NULL) return 0;
+    NO *tmp = fi->ini->prox;
+    fi->ini->prox = tmp->prox;
+    free(tmp);
     fi->qtd--;
     return 1;
 }
 
-int verInicio(Fila* fi, int* p){
-  if(fi == NULL) return 0;
-  if(estaVazia(fi)) return 0;
-  *p = fi->dados[fi->ini];
-  return 1;
+void imprime(Fila* fi) {
+    if(fi == NULL) return;
+    if(estaVazia(fi)){
+        printf("Fila Vazia!\n");
+        return;
+    }
+    NO *tmp = fi->ini;
+    printf("Elementos: \n");
+    while(tmp = tmp->prox) printf("%d ", tmp->info);
+    printf("\n");
 }
 
-void imprime(Fila* fi){
-  if(fi == NULL) return;
-  if(estaVazia(fi)){
-    printf("Fila Vazia!\n");
-    return;
-  }
-  int i = fi->ini;
-  printf("Elementos: \n");
-  do{
-    printf("%d ", fi->dados[i]);
-    i = (i + 1) % MAX;
-  }while(i != fi->fim);
-  //Usar do..while garante a impressao de todos elementos
-  //mesmo com a fila cheia
-  printf("\n");
-}
-
-#endif
+# endif

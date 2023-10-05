@@ -19,6 +19,7 @@ struct menu {
     size_t item_count;
     bool persistant;
     char *indicator;
+    char *(*get_header)();
 };
 
 struct menu_item*
@@ -49,6 +50,7 @@ menu_create(bool persistant)
     m->item_count = 0;
     m->persistant = persistant;
     m->indicator = NULL;
+    m->get_header = NULL;
     return m;
 }
 
@@ -139,6 +141,14 @@ menu_set_indicator(struct menu *m, char *indicator)
     return true;
 }
 
+bool
+menu_set_header(struct menu *m, char *(get_header)())
+{
+    if(m == NULL) return false;
+    m->get_header = get_header;
+    return true;
+}
+
 #define CURSOR_UP "\e[1A"
 #define CURSOR_DOWN "\e[1B"
 #define ENTER 10
@@ -158,6 +168,14 @@ menu_show(struct menu *m)
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
     
     do {
+        printf("\n");
+        if(m->get_header) {
+            char *text = m->get_header();
+            if(text) {
+                HLINE;
+                printf("%s\n",text);
+            }
+        }
         HLINE;
         struct menu_item *tmp = m->items->next;
         int index = 0;
